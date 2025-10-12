@@ -1,1 +1,29 @@
-# backtester
+# Bactesting framework
+
+## Folder structure
+
+backtester/
+├── core/
+│   ├── data_feed.py
+│   └── data_gen.py
+├── strategies/
+│   ├── sma_strategy.py
+│   └── ......
+├── utils/
+│   ├── ...
+├── tests/
+│   ├── ...
+└── main.py
+
+## Data Generation
+
+You can run `core/data_gen.py` to dowload historical data for every S&P500 company. List of symbols are taken from `data/symbols_sp500.csv` - it might be obsolete.
+This script will generate one `.csv` file per symbol. 
+
+`Date,Adj Close,Close,High,Low,Open,Volume
+2020-10-13,50.457847595214844,55.20000076293945,56.54999923706055,55.08000183105469,56.04999923706055,1406000
+2020-10-14,50.79606246948242,55.56999969482422,56.06999969482422,55.16999816894531,55.56999969482422,1005000
+2020-10-15,51.033729553222656,55.83000183105469,55.88999938964844,54.810001373291016,55.0,893200
+2020-10-16,50.61323928833008,55.369998931884766,56.54999923706055,55.20000076293945,56.18000030517578,1155200`
+
+Those `.csv` files are not commited to the repo.
