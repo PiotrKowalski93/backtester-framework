@@ -19,3 +19,7 @@ for symbol in symbols[:2]:
                    auto_adjust=False)
     data.to_csv(f'data/{symbol}.csv')
 
+# TODO: Prepare scripts for different data formats
+# 1) Parquet
+# 2) HDF5
+# 3) Feather
