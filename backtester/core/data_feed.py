@@ -10,6 +10,6 @@ class DataFeed:
         return self.data
     
     # Return each row one by one
-    def streamData(self):
+    def stream(self):
         for row in self.data.iterrows():
-            yield row
+            yield row[1]
