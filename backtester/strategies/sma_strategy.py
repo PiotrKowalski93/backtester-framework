@@ -35,7 +35,6 @@ class SimpleMovingAverageStrategy(IStrategy):
             self.position = -1
             self.trade_log.append(("SELL", tick['Date'], price))
 
-        # ??
         self.equity += self.position * (price - self.prices[-2])
 
     def on_finish(self):
