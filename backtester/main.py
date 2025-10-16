@@ -7,10 +7,16 @@ if __name__ == "__main__":
     feed = DataFeed("./backtester/data/MMM.csv")
     strategy = SimpleMovingAverageStrategy(short_window=5, long_window=10, equity=10000)
     backtester = Backtester(data_feed=feed, strategy=strategy)
-    result = backtester.run()
+    backtester.run()
 
-    print(result["final_equity"])
-    print(result["trades"])
+    print(strategy.trade_log)
+    
+    # print(portfolio.cash)
+    # print(portfolio.position)
+    # print(portfolio.history)
+
+    # print(result["final_equity"])
+    # print(result["trades"])
 
     # time =  [t[1] for t in result["trades"]]
     # equity = [t[2] for t in result["trades"]]

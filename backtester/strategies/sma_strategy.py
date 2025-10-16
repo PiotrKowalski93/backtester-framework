@@ -34,11 +34,3 @@ class SimpleMovingAverageStrategy(IStrategy):
         elif short_avg < long_avg and self.position >= 0:
             self.position = -1
             self.trade_log.append(("SELL", tick['Date'], price))
-
-        self.equity += self.position * (price - self.prices[-2])
-
-    def on_finish(self):
-        return {
-            "final_equity": self.equity,
-            "trades": self.trade_log
-        }
