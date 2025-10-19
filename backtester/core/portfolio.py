@@ -1,4 +1,5 @@
 #TODO: Learn how to build and use portfolio for tests
+# not working for now, still learning how to do it
 class Portfolio:
     def __init__(self, init_cash):
         self.cash = init_cash           # Cash in portfolio
