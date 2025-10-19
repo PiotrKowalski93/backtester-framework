@@ -226,3 +226,6 @@ packages
 #Data
 *.csv
 !symbols_sp500.csv
+
+#Docs
+*.pdf
