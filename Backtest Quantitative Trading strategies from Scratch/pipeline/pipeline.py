@@ -8,6 +8,12 @@ import pandas as pd
 file_path = '.\Backtest Quantitative Trading strategies from Scratch\data\EOD_FINAL.csv'
 
 class Pipeline:
+    '''
+        Returns a dataframe of all traded securities on the major stock exchanges in the US.
+        Input: starting date, ending date, field
+        --> Field can be one of the following: 'open','high','low','close','volume','div','split','adj_open','adj_high','adj_low','adj_close','adj_volume'
+    '''
+
     def __init__(self, start_date, end_date, field, file_path=file_path):
         self.start_date = start_date
         self.end_date = end_date
@@ -20,15 +26,26 @@ class Pipeline:
         # : - take all rows, and ('..','...') columns
         pipe = data.loc[:, ('symbol', 'time', self.field)]
         pipe.set_index(['time', 'symbol'], inplace=True)
-        pipe.sort_indes(inplace=True)
+        pipe.sort_index(inplace=True)
 
         # Unstuck the data for better visibility
         pipe = pipe.unstack(level='symbol')
         pipe = pipe.loc[self.start_date:self.end_date, self.field]
 
+        return pipe
+
+# For testing purpouses.
+# If name == main then file was started directly. We can use this place for basic tests
+# else: code was imported as module
 if __name__ == '__main__':
     print('Package is runnig locally')
-else:
-    print('Package exported')
+    start_date = '2001-01-01'
+    end_date = '2004-01-01'
+    field = 'adj_close'
+
+    test_pipe = Pipeline(start_date=start_date, end_date=end_date, field=field).make_pipeline()
+    print(test_pipe)
+# else:
+    # print('Package exported')
 
 
