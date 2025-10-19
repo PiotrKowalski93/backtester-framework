@@ -4,6 +4,7 @@
 
 import pandas as pd
 
+# file from Udemy: Backtest Quantitative Trading strategies from Scratch
 file_path = '.\Backtest Quantitative Trading strategies from Scratch\data\EOD_FINAL.csv'
 
 class Pipeline:
