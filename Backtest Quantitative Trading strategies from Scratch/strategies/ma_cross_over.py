@@ -58,6 +58,22 @@ class CrossOverBacktest:
         self.profit_df = None
 
     def handle_data(self):
+        # Main purpouse is to create signals based on the short and long term trend
+
+        self.prices_df['stock_prices'] = self.stock_series
+        # Short Term mean
+        self.prices_df['short_trend'] = self.stock_series.rolling(self.short_term_trend).mean()
+        # Long Term mean
+        self.prices_df['long_trend'] = self.stock_series.rolling(self.long_term_trend).mean()
+
+        # where is like LINQ in C#. Return 1 if TRUE, 0 when FALSE
+        prices_open = np.where(self.prices_df['short_trend'] > self.prices_df['long_trend'], 1, 0)
+
+        # We buy on 1, sell on 0
+        self.prices_df['prices_open'] = prices_open
+
+
+
         pass
 
     def backtest(self):
