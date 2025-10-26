@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 class CrossOverBacktest:
     '''
@@ -105,11 +106,56 @@ class CrossOverBacktest:
         if plot:
             # TODO: Add plott later on
             pass
-        
         print(self.profit_df.to_string())
 
     def backtest(self):
-        pass
+        # Keeping track of shares and new positions
+        self.shares = np.zeros(len(self.open_price))
+        self.portfolio_value = np.zeros(len(self.open_price))
+
+        # Open first trade
+        self.count_trade += 1
+        self.shares[0] = int(math.floor(self.capital / self.open_price.iloc[0]))
+        actual_investment = round(self.shares[0] * self.open_price.iloc[0], 4)
+        holding = self.capital - actual_investment
+
+        # Close first trade
+        profit_per_trade = round(self.shares[0] * self.profit_df.iloc[0], 4)
+        if(profit_per_trade > 0):
+            self.count_profit += 1
+        else:
+            self.count_loss += 1
+
+        # Calculate actual closing
+        self.portfolio_value[0] = profit_per_trade + holding + actual_investment
+
+        # Update step
+        self.holdings.append(holding)
+        self.profits.append(profit_per_trade)
+        self.invested.append(actual_investment)
+
+        # Now, we have initial conditions, then we can loop the rest
+        for i in range(1, len(self.open_price) - 1):
+            # Open trade
+            self.count_trade += 1
+            self.shares[i] = int(math.floor(self.portfolio_value[i-1] / self.open_price.iloc[i]))
+            actual_investment = round(self.shares[i] * self.open_price.iloc[i], 4)
+            holding = self.portfolio_value[i-1] - actual_investment
+
+            # Close trade
+            profit_per_trade = round(self.shares[i] * self.profit_df.iloc[i], 4)
+            if(profit_per_trade > 0):
+                self.count_profit += 1
+            else:
+                self.count_loss += 1
+
+            # Calculate actual closing
+            self.portfolio_value[i] = profit_per_trade + holding + actual_investment
+
+            # Update step
+            self.holdings.append(holding)
+            self.profits.append(profit_per_trade)
+            self.invested.append(actual_investment)
 
     def get_results(self):
         pass
@@ -120,6 +166,6 @@ if __name__ == "__main__":
     days = pd.date_range(start="2025-09-01", periods=80, freq="B")  # (Business days)
     prices = 100 + np.cumsum(np.random.normal(0.3, 1.5, size=80))
     stock_prices = pd.Series(prices, index=days, name="stock_prices")
-
+    # TODO: Use pipeline
     s = CrossOverBacktest(1000, None, None, None, stock_prices, 3, 7)
     s.handle_data()
