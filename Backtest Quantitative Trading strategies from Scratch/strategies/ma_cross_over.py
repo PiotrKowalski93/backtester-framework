@@ -158,9 +158,18 @@ class CrossOverBacktest:
             self.invested.append(actual_investment)
 
     def get_results(self):
-        pass
+        # Amalgamation of backtest result into a final dataframe
+        self.profit_df = pd.DataFrame(self.profits, columns=['profit_from_trade'])
 
-# For local testing purpouses
+        # Portfolio, we want to have all days, not only those 
+        portfolio_values_df = pd.DataFrame(self.portfolio_value, columns=['portfolio_value'], index=self.close_price.index).reindex(self.prices_df.index)
+        self.shares_df = pd.DataFrame(self.shares, columns=['number_of_shares'], index=self.open_price.index).reindex(self.prices_df.index)
+        holdings_df = pd.DataFrame(self.holdings, columns=['holdings'], index=self.open_price.index).reindex(self.prices_df.index)
+
+        # Final results df, axis=1 is date
+        self.results = pd.concat([portfolio_values_df, self.shares_df, holdings_df], sort=True, axis=1)
+
+# For local fast testing purpouses
 if __name__ == "__main__":
     np.random.seed(42)
     days = pd.date_range(start="2025-09-01", periods=80, freq="B")  # (Business days)
