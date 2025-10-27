@@ -83,14 +83,10 @@ class CrossOverBacktest:
         self.open_price = self.prices_df['stock_prices'][self.prices_df['trade_open'] == 1]
         self.close_price = self.prices_df['stock_prices'][self.prices_df['trade_open'] == -1]
 
-        print(self.prices_df.to_string())
-        print(self.open_price)
-        print(self.close_price)
-
         # We have to ensure that we do not have 1 at the end - we will buy and not close position
         if(len(self.open_price) > len(self.close_price)):
+            
             last_trading_day = self.prices_df.index[-1]
-            print(last_trading_day)
             self.prices_df['positions_open'].loc[last_trading_day] = -1 # why?
             self.prices_df['trade_open'].loc[last_trading_day] = -1     
 
@@ -106,7 +102,6 @@ class CrossOverBacktest:
         if plot:
             # TODO: Add plott later on
             pass
-        print(self.profit_df.to_string())
 
     def backtest(self):
         # Keeping track of shares and new positions
@@ -120,8 +115,8 @@ class CrossOverBacktest:
         holding = self.capital - actual_investment
 
         # Close first trade
-        profit_per_trade = round(self.shares[0] * self.profit_df.iloc[0], 4)
-        if(profit_per_trade > 0):
+        profit_per_trade = round(self.shares[0] * self.profit_df.iloc[0,0], 4)
+        if profit_per_trade > 0:
             self.count_profit += 1
         else:
             self.count_loss += 1
@@ -143,8 +138,8 @@ class CrossOverBacktest:
             holding = self.portfolio_value[i-1] - actual_investment
 
             # Close trade
-            profit_per_trade = round(self.shares[i] * self.profit_df.iloc[i], 4)
-            if(profit_per_trade > 0):
+            profit_per_trade = round(self.shares[i] * self.profit_df.iloc[i, 0], 4)
+            if profit_per_trade > 0:
                 self.count_profit += 1
             else:
                 self.count_loss += 1
@@ -152,6 +147,7 @@ class CrossOverBacktest:
             # Calculate actual closing
             self.portfolio_value[i] = profit_per_trade + holding + actual_investment
 
+            # TODO: Add every position with a date, it will be easier to put it together in get_results()
             # Update step
             self.holdings.append(holding)
             self.profits.append(profit_per_trade)
@@ -160,14 +156,31 @@ class CrossOverBacktest:
     def get_results(self):
         # Amalgamation of backtest result into a final dataframe
         self.profit_df = pd.DataFrame(self.profits, columns=['profit_from_trade'])
+        print('profit_df:')
+        print(self.profit_df)
 
         # Portfolio, we want to have all days, not only those 
         portfolio_values_df = pd.DataFrame(self.portfolio_value, columns=['portfolio_value'], index=self.close_price.index).reindex(self.prices_df.index)
+        #print(portfolio_values_df.to_string())
+
         self.shares_df = pd.DataFrame(self.shares, columns=['number_of_shares'], index=self.open_price.index).reindex(self.prices_df.index)
-        holdings_df = pd.DataFrame(self.holdings, columns=['holdings'], index=self.open_price.index).reindex(self.prices_df.index)
+
+        print(self.holdings)
+        print('   ')
+        print(self.open_price)
+        print('  ')
+        #print(self.prices_df)
+
+        holdings_df = pd.DataFrame(self.holdings, columns=['holdings']).reindex(self.open_price.index) #.reindex(self.prices_df.index)
+
+        print('holdings:')
+        print(holdings_df.to_string())
 
         # Final results df, axis=1 is date
         self.results = pd.concat([portfolio_values_df, self.shares_df, holdings_df], sort=True, axis=1)
+
+        print('results:')
+        print(self.results.to_string())
 
 # For local fast testing purpouses
 if __name__ == "__main__":
@@ -175,6 +188,9 @@ if __name__ == "__main__":
     days = pd.date_range(start="2025-09-01", periods=80, freq="B")  # (Business days)
     prices = 100 + np.cumsum(np.random.normal(0.3, 1.5, size=80))
     stock_prices = pd.Series(prices, index=days, name="stock_prices")
+
     # TODO: Use pipeline
     s = CrossOverBacktest(1000, None, None, None, stock_prices, 3, 7)
     s.handle_data()
+    s.backtest()
+    s.get_results()
