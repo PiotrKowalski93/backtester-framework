@@ -40,9 +40,9 @@ class CrossOverBacktest:
         self.avg_trade = 0
 
         # Individual Trades
-        self.profits = []        
-        self.holdings = []      
-        self.invested = []      # Capital - Holdins
+        self.profits = pd.Series(dtype='float64')        
+        self.holdings = pd.Series(dtype='float64')     
+        self.invested = pd.Series(dtype='float64')
 
         # Portfolio
         self.portfolio_value = None
@@ -124,10 +124,10 @@ class CrossOverBacktest:
         # Calculate actual closing
         self.portfolio_value[0] = profit_per_trade + holding + actual_investment
 
-        # Update step
-        self.holdings.append(holding)
-        self.profits.append(profit_per_trade)
-        self.invested.append(actual_investment)
+        current_step_date = self.open_price.index[0]
+        self.holdings[current_step_date] = holding
+        self.profits[current_step_date] = profit_per_trade
+        self.invested[current_step_date] = actual_investment
 
         # Now, we have initial conditions, then we can loop the rest
         for i in range(1, len(self.open_price) - 1):
@@ -147,11 +147,15 @@ class CrossOverBacktest:
             # Calculate actual closing
             self.portfolio_value[i] = profit_per_trade + holding + actual_investment
 
-            # TODO: Add every position with a date, it will be easier to put it together in get_results()
             # Update step
-            self.holdings.append(holding)
-            self.profits.append(profit_per_trade)
-            self.invested.append(actual_investment)
+            current_step_date = self.open_price.index[i]
+            self.holdings[current_step_date] = holding
+            self.profits[current_step_date] = profit_per_trade
+            self.invested[current_step_date] = actual_investment
+
+        # print(self.holdings)
+        # print(self.profits)
+        # print(self.invested)
 
     def get_results(self):
         # Amalgamation of backtest result into a final dataframe
@@ -169,7 +173,7 @@ class CrossOverBacktest:
         print('   ')
         print(self.open_price)
         print('  ')
-        #print(self.prices_df)
+        print(self.prices_df)
 
         holdings_df = pd.DataFrame(self.holdings, columns=['holdings']).reindex(self.open_price.index) #.reindex(self.prices_df.index)
 
