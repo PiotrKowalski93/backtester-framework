@@ -5,7 +5,7 @@
 import pandas as pd
 
 # file from Udemy: Backtest Quantitative Trading strategies from Scratch
-file_path = '.\Backtest Quantitative Trading strategies from Scratch\data\EOD_FINAL.csv'
+file_path = '.\\backtester_v2\\data\\EOD_FINAL.csv'
 
 class Pipeline:
     '''
@@ -20,19 +20,26 @@ class Pipeline:
         self.field = field
         self.file_path = file_path
 
+        self.pipe = pd.DataFrame()
+
     def make_pipeline(self):
-        data = pd.read_csv(self.file_path, index_col=0, nrows=3000000) # rows for now, remove in real world scenario
-        
+        data = pd.read_csv(self.file_path, index_col=0)#, nrows=30000) # rows for now, remove in real world scenario
+
         # : - take all rows, and ('..','...') columns
-        pipe = data.loc[:, ('symbol', 'time', self.field)]
-        pipe.set_index(['time', 'symbol'], inplace=True)
-        pipe.sort_index(inplace=True)
+        self.pipe = data.loc[:, ('symbol', 'time', self.field)]
+        self.pipe.set_index(['time', 'symbol'], inplace=True)
+        self.pipe.sort_index(inplace=True)
 
         # Unstuck the data for better visibility
-        pipe = pipe.unstack(level='symbol')
-        pipe = pipe.loc[self.start_date:self.end_date, self.field]
+        self.pipe = self.pipe.unstack(level='symbol')
+        self.pipe = self.pipe.loc[self.start_date:self.end_date, self.field]
+        #print(self.pipe)
 
-        return pipe
+        return self.pipe
+    
+    def get_prices(self, start_date, end_date, ticker):
+        #print(self.pipe[ticker].loc[start_date:end_date])
+        return self.pipe[ticker].loc[start_date:end_date]
 
 # For testing purpouses.
 # If name == main then file was started directly. We can use this place for basic tests

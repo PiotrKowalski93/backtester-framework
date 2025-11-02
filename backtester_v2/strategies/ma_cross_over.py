@@ -87,8 +87,10 @@ class CrossOverBacktest:
         if(len(self.open_price) > len(self.close_price)):
             
             last_trading_day = self.prices_df.index[-1]
-            self.prices_df['positions_open'].loc[last_trading_day] = -1 # why?
-            self.prices_df['trade_open'].loc[last_trading_day] = -1     
+            
+            # df.loc[row_indexer, "col"] = values modyfi orginal object
+            self.prices_df.loc[last_trading_day, "positions_open"] = -1
+            self.prices_df.loc[last_trading_day, "trade_open"] = -1
 
             # Adding extra trading day
             self.close_price.loc[last_trading_day] = self.prices_df['stock_prices'].loc[last_trading_day]
@@ -100,7 +102,22 @@ class CrossOverBacktest:
             self.profit_df = pd.DataFrame(self.close_price.values - self.open_price.values, index=self.close_price.index)
             
         if plot:
-            # TODO: Add plott later on
+            plt.figure(figsize=(12, 8))
+
+            # Plot the closing price
+            plt.plot(self.prices_df['stock_prices'], color='black', lw=2.)
+
+            # Plot the short and long moving averages
+            plt.plot(self.prices_df[['short_trend', 'long_trend']], lw=2.)
+
+            # Plot the buy signals
+            plt.plot(self.prices_df.stock_prices[self.prices_df.trade_open == 1], '^', markersize=8, color='m', label='buy signal')
+
+            # Plot the sell signals
+            plt.plot(self.prices_df.stock_prices[self.prices_df.trade_open == -1], 'v', markersize=8, color='k', label='sell signal')
+            plt.legend(['price', 'MA_'+str(self.short_term_trend), 'MA_'+str(self.long_term_trend), 'Buy Signal', 'Sell Signal'], loc='best')
+
+            plt.show()
             pass
 
     def backtest(self):
@@ -158,33 +175,35 @@ class CrossOverBacktest:
         # print(self.invested)
 
     def get_results(self):
-        # Amalgamation of backtest result into a final dataframe
-        self.profit_df = pd.DataFrame(self.profits, columns=['profit_from_trade'])
-        print('profit_df:')
-        print(self.profit_df)
+        self.profits_df = pd.DataFrame(self.profits, columns=['profit_from_trade'])
+        # create the portfolio data frame, we reset the index to all the trading days, same goes for the other metrics
+        port_val_df = pd.DataFrame(self.portfolio_value, index=self.close_price.index, columns=['portfolio_value']).reindex(index=self.prices_df.index)
+        self.shares_df = pd.DataFrame(self.shares, index=self.open_price.index, columns=['shares']).reindex(index=self.prices_df.index)
+        holding_df = pd.DataFrame(self.holdings, index=self.open_price.index, columns=['holdings']).reindex(index=self.prices_df.index)
 
-        # Portfolio, we want to have all days, not only those 
-        portfolio_values_df = pd.DataFrame(self.portfolio_value, columns=['portfolio_value'], index=self.close_price.index).reindex(self.prices_df.index)
-        #print(portfolio_values_df.to_string())
+        # concatenating them together
+        self.results = pd.concat([port_val_df, self.shares_df, holding_df, self.prices_df.stock_price], sort=True, axis=1)
+        # print("\t \t {0} ".format(self.results))
+        # if no trades are placed on the first day, we set it to 0, which will help with forward filling
+        for i in range(len(self.close_price.index)):
+            open_ = self.open_price.index[i]
+            close_ = self.close_price.index[i]
+            self.results.shares.loc[open_: close_].fillna(method='ffill', inplace=True)
+            self.results.holdings.loc[open_: close_].fillna(method='ffill', inplace=True)
 
-        self.shares_df = pd.DataFrame(self.shares, columns=['number_of_shares'], index=self.open_price.index).reindex(self.prices_df.index)
+        self.results.portfolio_value.loc[:self.open_price.index[0]].fillna(self.capital, inplace=True)
+        # portfolio_value = shares * stock_price + what ever we are holding
+        self.results.portfolio_value = self.results.portfolio_value.fillna(self.results.shares * self.results.stock_price)
+        self.results.portfolio_value = self.results.portfolio_value + self.results.holdings
+        self.results.portfolio_value.fillna(method='ffill', inplace=True)
+        self.results.shares.fillna(0, inplace=True)
+        self.results.holdings.fillna(0, inplace=True)
 
-        print(self.holdings)
-        print('   ')
-        print(self.open_price)
-        print('  ')
-        print(self.prices_df)
+        self.count_loss = self.count_trade - self.count_profit
+        self.average_trade_val = self.profits_df.profit_from_trade.mean()
 
-        holdings_df = pd.DataFrame(self.holdings, columns=['holdings']).reindex(self.open_price.index) #.reindex(self.prices_df.index)
-
-        print('holdings:')
-        print(holdings_df.to_string())
-
-        # Final results df, axis=1 is date
-        self.results = pd.concat([portfolio_values_df, self.shares_df, holdings_df], sort=True, axis=1)
-
-        print('results:')
-        print(self.results.to_string())
+        self.avg_pos_trades = self.profits_df.profit_from_trade[self.profits_df.profit_from_trade > 0].mean()
+        self.avg_neg_trades = self.profits_df.profit_from_trade[self.profits_df.profit_from_trade < 0].mean()
 
 # For local fast testing purpouses
 if __name__ == "__main__":
