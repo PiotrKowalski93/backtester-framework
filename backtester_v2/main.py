@@ -19,7 +19,7 @@ def sharpe_ratio(df, risk_free_rate=0.04, freq=252):
     excess_return = df["returns"].mean() * freq - risk_free_rate
     return excess_return / (df["returns"].std() * np.sqrt(freq))
 
-def drowdown(df):
+def drawdown(df):
     cumulative = (1 + df['returns']).cumprod()
     peak = cumulative.cummax()
     drowdown = (cumulative / peak - 1)
@@ -68,8 +68,8 @@ def spy_vs_russell():
     #TODO: 1) All metrics
     spy_annual_returns = spy_grouped.apply(annualized_return)
     russell_annual_returns = russell_grouped.apply(annualized_return)
-    print(spy_annual_returns)
-    print(russell_annual_returns)
+    #print(spy_annual_returns)
+    #print(russell_annual_returns)
 
     spy_annual_volatility = spy_grouped.apply(annualized_volatility)
     russell_annual_volatility = russell_grouped.apply(annualized_volatility)
@@ -90,22 +90,30 @@ def spy_vs_russell():
 
     spy_vs_russell_rolling_col = rolling_correlation(spy, russell)
     
-    #TODO: 2) Histograms for SPY and Russell
-    plt.figure(figsize=(10,5))
-    plt.plot(spy.index, spy['cumulative_returns'], label='SPY', linewidth=2)
-    plt.plot(russell.index, russell['cumulative_returns'], label='Russell 3000', linewidth=2)
-    plt.title('Cumulative Returns')
-    plt.ylabel('Portfolio Value (Growth of $1)')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    #TODO: All plots on one dashboard
+    fig, axes = plt.subplots(3, 3, figsize=(14, 12))
+    fig.suptitle("Performance Dashboard: SPY vs Russell 3000", fontsize=16, fontweight="bold")
 
+    # [1] Cumulative Returns
+    axes[0, 0].plot(spy.index, spy['cumulative_returns'], label='SPY', linewidth=2)
+    axes[0, 0].plot(russell.index, russell['cumulative_returns'], label='Russell 3000', linewidth=2)
+    axes[0, 0].set_title('Cumulative Returns')
+    axes[0, 0].set_ylabel('Portfolio Value (Growth of $1)')
+    axes[0, 0].legend()
 
-    #TODO: 3) All plots on one dashboard
+    # [2] Drawdown
 
-    #TODO: 4) Implement Momentum strategy with backtest 
-    #TODO: 5) Implement Value Strategy with backtest
-    #TODO: 6) Count measures as above for both and compare
+    # [3] Rolling Volatility
+
+    # [4] Rolling Sharpe Ratio
+
+    # [5] Rolling Correlation
+
+    # [6] Annual Returns
+
+    #TODO: Implement Momentum strategy with backtest 
+    #TODO: Implement Value Strategy with backtest
+    #TODO: Count measures as above for both and compare
     pass
 
 if __name__ == "__main__":
